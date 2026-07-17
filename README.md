@@ -30,33 +30,45 @@ Dashboard escolar con backend en **Python (Flask + SQLAlchemy)** y frontend en
 ---
 
 ## 2. Estructura del proyecto
-
-```
+```text
 school-dashboard/
 ├── backend/
-│   ├── app.py                 # App factory + registro de blueprints
-│   ├── config.py               # Config vía variables de entorno
-│   ├── extensions.py           # db, jwt, bcrypt, cors
-│   ├── models.py               # Modelos SQLAlchemy (existentes + nuevos)
-│   ├── utils.py                 # Decorador de permisos por rol
-│   ├── seed.py                  # Script para crear usuarios de prueba
-│   ├── migrations/001_new_tables.sql
+│   ├── app.py                    # App Factory + registro de blueprints
+│   ├── config.py                 # Configuración mediante variables de entorno
+│   ├── extensions.py             # db, jwt, bcrypt, cors
+│   ├── models.py                 # Modelos SQLAlchemy
+│   ├── utils.py                  # Decoradores y utilidades
+│   ├── seed.py                   # Script para crear usuarios de prueba
+│   ├── migrations/
+│   │   └── 001_new_tables.sql
 │   └── routes/
-│       ├── auth.py             # /api/auth/*
-│       ├── alumno.py           # /api/alumno/*
-│       ├── profesor.py         # /api/profesor/*
-│       └── common.py           # /api/archivos/*, /api/salud
+│       ├── auth.py               # /api/auth/*
+│       ├── alumno.py             # /api/alumno/*
+│       ├── profesor.py           # /api/profesor/*
+│       └── common.py             # /api/archivos/*, /api/salud
+│
 └── frontend/
     └── src/
-        ├── App.jsx              # Rutas (cambian según el rol)
-        ├── api.js                # Cliente axios + refresh de token
-        ├── context/AuthContext.jsx
-        ├── i18n/                 # Traducciones ES/EN
-        ├── components/           # Sidebar, Topbar, layout protegido
+        ├── App.jsx               # Rutas principales
+        ├── api.js                # Cliente Axios
+        ├── context/
+        │   └── AuthContext.jsx
+        ├── i18n/
+        ├── components/
+        │   ├── Sidebar.jsx
+        │   ├── Topbar.jsx
+        │   └── ProtectedRoute.jsx
         └── pages/
-            ├── Login.jsx, Dashboard.jsx, Settings.jsx
-            ├── alumno/           # Calificaciones, Tareas, Boleta, Materias...
-            └── profesor/         # Calificaciones, Tareas, Asistencia
+            ├── Login.jsx
+            ├── Dashboard.jsx
+            ├── Settings.jsx
+            ├── alumno/
+            │   ├── Calificaciones.jsx
+            │   ├── Tareas.jsx
+            │   ├── Boleta.jsx
+            │   └── Materias.jsx
+            └── profesor/
+                ├── Calificaciones.jsx
+                ├── Tareas.jsx
+                └── Asistencia.jsx
 ```
-
----
