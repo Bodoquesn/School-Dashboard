@@ -31,44 +31,46 @@ Dashboard escolar con backend en **Python (Flask + SQLAlchemy)** y frontend en
 
 ## 2. Estructura del proyecto
 ```text
-school-dashboard/
-├── backend/
-│   ├── app.py                    # App Factory + registro de blueprints
-│   ├── config.py                 # Configuración mediante variables de entorno
-│   ├── extensions.py             # db, jwt, bcrypt, cors
-│   ├── models.py                 # Modelos SQLAlchemy
-│   ├── utils.py                  # Decoradores y utilidades
-│   ├── seed.py                   # Script para crear usuarios de prueba
-│   ├── migrations/
-│   │   └── 001_new_tables.sql
-│   └── routes/
-│       ├── auth.py               # /api/auth/*
-│       ├── alumno.py             # /api/alumno/*
-│       ├── profesor.py           # /api/profesor/*
-│       └── common.py             # /api/archivos/*, /api/salud
-│
-└── frontend/
-    └── src/
-        ├── App.jsx               # Rutas principales
-        ├── api.js                # Cliente Axios
-        ├── context/
-        │   └── AuthContext.jsx
-        ├── i18n/
-        ├── components/
-        │   ├── Sidebar.jsx
-        │   ├── Topbar.jsx
-        │   └── ProtectedRoute.jsx
-        └── pages/
-            ├── Login.jsx
-            ├── Dashboard.jsx
-            ├── Settings.jsx
-            ├── alumno/
-            │   ├── Calificaciones.jsx
-            │   ├── Tareas.jsx
-            │   ├── Boleta.jsx
-            │   └── Materias.jsx
-            └── profesor/
-                ├── Calificaciones.jsx
-                ├── Tareas.jsx
-                └── Asistencia.jsx
+backend/
+├── app.py
+├── config.py
+├── extensions.py
+├── models.py
+├── utils.py
+├── seed.py
+├── migrations/
+└── routes/
+    ├── auth.py
+    ├── alumno.py
+    ├── profesor.py
+    └── common.py
+
+frontend/
+└── src/
+    ├── components/
+    ├── context/
+    ├── pages/
+    ├── App.jsx
+    ├── api.js
+    └── i18n/
 ```
+
+### Backend
+
+| Archivo | Descripción |
+|---------|-------------|
+| `app.py` | App Factory y registro de Blueprints |
+| `config.py` | Configuración mediante variables de entorno |
+| `extensions.py` | SQLAlchemy, JWT, Bcrypt y CORS |
+| `models.py` | Modelos de la base de datos |
+| `utils.py` | Decoradores y funciones auxiliares |
+| `seed.py` | Crea usuarios de prueba |
+
+### Frontend
+
+| Carpeta | Descripción |
+|---------|-------------|
+| `components/` | Componentes reutilizables |
+| `pages/` | Pantallas de la aplicación |
+| `context/` | Context API (autenticación) |
+| `i18n/` | Internacionalización |
