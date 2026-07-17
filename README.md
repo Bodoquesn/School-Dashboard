@@ -30,8 +30,6 @@ Dashboard escolar con backend en **Python (Flask + SQLAlchemy)** y frontend en
 ---
 
 ## 2. Estructura del proyecto
-<<<<<<< HEAD
-## 📂 Estructura del proyecto
 
 ```text
 backend/
@@ -48,23 +46,6 @@ backend/
     ├── profesor.py
     └── common.py
 
-=======
-```text
-backend/
-├── app.py
-├── config.py
-├── extensions.py
-├── models.py
-├── utils.py
-├── seed.py
-├── migrations/
-└── routes/
-    ├── auth.py
-    ├── alumno.py
-    ├── profesor.py
-    └── common.py
-
->>>>>>> 263da8271c6b33203f2d69d06ae5a754023faf0f
 frontend/
 └── src/
     ├── components/
