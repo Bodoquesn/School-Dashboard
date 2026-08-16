@@ -1,3 +1,5 @@
+import AuthenticatedImage from "./AuthenticatedImage";
+
 export default function ListaPersonas({ titulo, personas, cargando, t }) {
   return (
     <div>
@@ -16,7 +18,13 @@ export default function ListaPersonas({ titulo, personas, cargando, t }) {
             const inicial = p.nombre?.charAt(0)?.toUpperCase();
             return (
               <div key={id} className="card" style={{ display: "flex", gap: 14, alignItems: "center" }}>
-                <div className="avatar" style={{ width: 46, height: 46, fontSize: 17 }}>{inicial}</div>
+                <AuthenticatedImage
+                  archivo={p.foto}
+                  alt={p.nombre}
+                  className="avatar avatar-image"
+                  style={{ width: 46, height: 46, fontSize: 17 }}
+                  fallback={<div className="avatar" style={{ width: 46, height: 46, fontSize: 17 }}>{inicial}</div>}
+                />
                 <div>
                   <p style={{ fontWeight: 600, fontSize: 14 }}>{p.nombre}</p>
                   <p style={{ fontSize: 12, color: "var(--ink-soft)" }}>{p.email}</p>

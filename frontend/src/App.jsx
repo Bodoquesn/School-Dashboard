@@ -7,6 +7,7 @@ import { useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
+import Reportes from "./pages/Reportes";
 
 import CalificacionesAlumno from "./pages/alumno/Calificaciones";
 import TareasAlumno from "./pages/alumno/Tareas";
@@ -18,6 +19,7 @@ import Companeros from "./pages/alumno/Companeros";
 import CalificacionesProfesor from "./pages/profesor/Calificaciones";
 import TareasProfesor from "./pages/profesor/Tareas";
 import Asistencia from "./pages/profesor/Asistencia";
+import Argos from "./pages/profesor/Argos";
 
 export default function App() {
   return (
@@ -30,6 +32,7 @@ export default function App() {
             <Route element={<ProtectedLayout />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/configuracion" element={<Settings />} />
+              <Route path="/reportes" element={<Reportes />} />
 
               {/* Calificaciones y Tareas cambian de componente según el rol */}
               <Route
@@ -51,6 +54,7 @@ export default function App() {
 
               {/* Solo profesor */}
               <Route path="/asistencia" element={<RoleRoute roles={["profesor"]}><Asistencia /></RoleRoute>} />
+              <Route path="/argos" element={<RoleRoute roles={["profesor", "admin"]}><Argos /></RoleRoute>} />
             </Route>
           </Routes>
         </AuthProvider>

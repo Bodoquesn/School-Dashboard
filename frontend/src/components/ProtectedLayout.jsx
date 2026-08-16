@@ -29,7 +29,7 @@ export function ProtectedLayout() {
   );
 }
 
-/** Restringe una ruta a uno o varios roles ('alumno' | 'profesor') */
+/** Restringe una ruta a uno o varios roles ('alumno' | 'profesor' | 'admin') */
 export function RoleRoute({ roles, children }) {
   const { usuario } = useAuth();
   if (!usuario) return <Navigate to="/login" replace />;

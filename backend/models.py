@@ -109,6 +109,7 @@ class CAlumno(db.Model):
     id_turno = db.Column(db.Integer, db.ForeignKey("d_turno.id_turno"))
     id_estatus = db.Column(db.Integer, db.ForeignKey("c_estatus.id_estatus"))
     fecha_nacimiento = db.Column(db.Date)
+    matricula = db.Column(db.String(30), unique=True)  # ver migración 002
 
     def nombre_completo(self):
         return f"{self.nombre} {self.apellido_paterno} {self.apellido_materno}".strip()
@@ -116,6 +117,7 @@ class CAlumno(db.Model):
     def to_dict(self):
         return {
             "id_alumno": self.id_alumno,
+            "matricula": self.matricula,
             "nombre": self.nombre_completo(),
             "email": self.email,
             "foto": self.foto,
@@ -153,6 +155,7 @@ class CProfesor(db.Model):
     id_turno = db.Column(db.Integer, db.ForeignKey("d_turno.id_turno"))
     id_estatus = db.Column(db.Integer, db.ForeignKey("c_estatus.id_estatus"))
     fecha_nacimiento = db.Column(db.Date)
+    clave_tutor = db.Column(db.String(30), unique=True)  # ver migración 002
 
     def nombre_completo(self):
         return f"{self.nombre} {self.apellido_paterno} {self.apellido_materno}".strip()
@@ -160,6 +163,7 @@ class CProfesor(db.Model):
     def to_dict(self):
         return {
             "id_profesor": self.id_profesor,
+            "clave_tutor": self.clave_tutor,
             "nombre": self.nombre_completo(),
             "email": self.email,
             "foto": self.foto,
@@ -320,4 +324,44 @@ class Asistencia(db.Model):
             "id_profesor": self.id_profesor,
             "fecha": self.fecha.isoformat() if self.fecha else None,
             "estatus": self.estatus,
+        }
+
+
+class RostroAlumno(db.Model):
+    """Descriptor biométrico de ARGOS ligado al alumno existente del portal."""
+    __tablename__ = "rostros_alumnos"
+    id_rostro = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id_alumno = db.Column(
+        db.Integer, db.ForeignKey("c_alumnos.id_alumno"), nullable=False, unique=True, index=True
+    )
+    motor = db.Column(db.String(50), nullable=False, index=True)
+    descriptor = db.Column(db.JSON, nullable=False)
+    actualizado_en = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class EventoBiometrico(db.Model):
+    """Entrada o salida reconocida por ARGOS; no sustituye el pase de lista."""
+    __tablename__ = "eventos_biometricos"
+    id_evento = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id_alumno = db.Column(
+        db.Integer, db.ForeignKey("c_alumnos.id_alumno"), nullable=False, index=True
+    )
+    id_profesor = db.Column(
+        db.Integer, db.ForeignKey("c_profesor.id_profesor"), nullable=True, index=True
+    )
+    reconocido_en = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, index=True)
+    confianza = db.Column(db.Float, nullable=False)
+    camara = db.Column(db.String(150), default="Cámara principal")
+    tipo_evento = db.Column(db.String(30), default="entrada")
+
+    def to_dict(self, alumno=None, campus=None):
+        return {
+            "id_evento": self.id_evento,
+            "id_alumno": self.id_alumno,
+            "alumno": alumno.nombre_completo() if alumno else None,
+            "campus": campus.nombrecampus if campus else None,
+            "reconocido_en": self.reconocido_en.isoformat() if self.reconocido_en else None,
+            "confianza": self.confianza,
+            "camara": self.camara,
+            "tipo_evento": self.tipo_evento,
         }

@@ -1,14 +1,19 @@
 import { useState } from "react";
 import api from "../api";
 import { useI18n } from "../i18n/I18nContext";
+import { useAuth } from "../context/AuthContext";
+import AuthenticatedImage from "../components/AuthenticatedImage";
 
 export default function Settings() {
   const { t, lang, setLang } = useI18n();
+  const { perfil, actualizarPerfil } = useAuth();
   const [passwordActual, setPasswordActual] = useState("");
   const [passwordNueva, setPasswordNueva] = useState("");
   const [mensaje, setMensaje] = useState("");
   const [error, setError] = useState("");
   const [guardando, setGuardando] = useState(false);
+  const [foto, setFoto] = useState(null);
+  const [subiendoFoto, setSubiendoFoto] = useState(false);
 
   async function cambiarIdioma(nuevo) {
     setLang(nuevo);
@@ -30,6 +35,26 @@ export default function Settings() {
     }
   }
 
+  async function handleFoto(e) {
+    e.preventDefault();
+    if (!foto) return;
+    const formulario = e.currentTarget;
+    setMensaje(""); setError(""); setSubiendoFoto(true);
+    const data = new FormData();
+    data.append("foto", foto);
+    try {
+      const respuesta = await api.put("/auth/foto", data);
+      actualizarPerfil(respuesta.data.perfil);
+      setFoto(null);
+      formulario.reset();
+      setMensaje(t("foto_actualizada"));
+    } catch (err) {
+      setError(err.response?.data?.msg || "Error");
+    } finally {
+      setSubiendoFoto(false);
+    }
+  }
+
   return (
     <div>
       <div className="page-header">
@@ -38,6 +63,23 @@ export default function Settings() {
       </div>
 
       <div className="grid grid-cols-2">
+        <div className="card">
+          <h3 style={{ marginBottom: 14 }}>{t("foto_perfil")}</h3>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <AuthenticatedImage
+              archivo={perfil?.foto}
+              alt={perfil?.nombre}
+              className="avatar avatar-image"
+              style={{ width: 72, height: 72 }}
+              fallback={<div className="avatar" style={{ width: 72, height: 72, fontSize: 24 }}>{perfil?.nombre?.charAt(0) || "?"}</div>}
+            />
+            <form onSubmit={handleFoto} style={{ flex: 1 }}>
+              <input type="file" accept="image/jpeg,image/png,image/webp" required onChange={(e) => setFoto(e.target.files?.[0] || null)} />
+              <button className="btn btn-primary" style={{ marginTop: 10 }} disabled={subiendoFoto}>{subiendoFoto ? t("cargando") : t("subir_foto")}</button>
+            </form>
+          </div>
+        </div>
+
         <div className="card">
           <h3 style={{ marginBottom: 14 }}>{t("idioma")}</h3>
           <div className="lang-switch" style={{ width: "fit-content" }}>

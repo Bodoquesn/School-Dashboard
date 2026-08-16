@@ -1,6 +1,7 @@
 import { useI18n } from "../i18n/I18nContext";
 import { useAuth } from "../context/AuthContext";
 import api from "../api";
+import AuthenticatedImage from "./AuthenticatedImage";
 
 export default function Topbar() {
   const { t, lang, setLang } = useI18n();
@@ -17,7 +18,9 @@ export default function Topbar() {
 
   const nombre = perfil?.nombre || usuario?.username || "";
   const inicial = nombre.charAt(0).toUpperCase();
-  const rol = usuario?.tipo_usuario === "profesor" ? t("role_profesor") : t("role_alumno");
+  const rol = usuario?.tipo_usuario === "admin"
+    ? t("role_admin")
+    : usuario?.tipo_usuario === "profesor" ? t("role_profesor") : t("role_alumno");
 
   return (
     <header className="topbar">
@@ -30,7 +33,12 @@ export default function Topbar() {
         </div>
 
         <div className="user-chip">
-          <div className="avatar">{inicial || "?"}</div>
+          <AuthenticatedImage
+            archivo={perfil?.foto}
+            alt={nombre}
+            className="avatar avatar-image"
+            fallback={<div className="avatar">{inicial || "?"}</div>}
+          />
           <div>
             <div style={{ fontSize: 13, fontWeight: 600 }}>{nombre}</div>
             <div style={{ fontSize: 11, color: "var(--ink-soft)" }}>{rol}</div>

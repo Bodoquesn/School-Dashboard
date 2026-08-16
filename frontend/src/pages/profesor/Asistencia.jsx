@@ -11,6 +11,7 @@ export default function Asistencia() {
   const [alumnos, setAlumnos] = useState([]);
   const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
   const [idHorario, setIdHorario] = useState("");
+  const [horarios, setHorarios] = useState([]);
   const [estatusPorAlumno, setEstatusPorAlumno] = useState({});
   const [guardando, setGuardando] = useState(false);
   const [guardadoOk, setGuardadoOk] = useState(false);
@@ -20,11 +21,16 @@ export default function Asistencia() {
   }, []);
 
   useEffect(() => {
-    if (!grupoSel) { setAlumnos([]); return; }
-    api.get(`/profesor/grupos/${grupoSel}/alumnos`).then((res) => {
-      setAlumnos(res.data);
+    if (!grupoSel) { setAlumnos([]); setHorarios([]); setIdHorario(""); return; }
+    Promise.all([
+      api.get(`/profesor/grupos/${grupoSel}/alumnos`),
+      api.get(`/profesor/grupos/${grupoSel}/horarios`),
+    ]).then(([alumnosRes, horariosRes]) => {
+      setAlumnos(alumnosRes.data);
+      setHorarios(horariosRes.data);
+      setIdHorario(horariosRes.data[0]?.id_horario?.toString() || "");
       const inicial = {};
-      res.data.forEach((a) => { inicial[a.id_alumno] = "presente"; });
+      alumnosRes.data.forEach((a) => { inicial[a.id_alumno] = "presente"; });
       setEstatusPorAlumno(inicial);
     });
   }, [grupoSel]);
@@ -61,8 +67,15 @@ export default function Asistencia() {
             </select>
           </div>
           <div className="field" style={{ marginBottom: 0 }}>
-            <label>{t("horario")} (id)</label>
-            <input type="number" value={idHorario} onChange={(e) => setIdHorario(e.target.value)} placeholder="id_horario" />
+            <label>{t("horario")}</label>
+            <select value={idHorario} onChange={(e) => setIdHorario(e.target.value)} disabled={!grupoSel}>
+              <option value="">--</option>
+              {horarios.map((horario) => (
+                <option key={horario.id_horario} value={horario.id_horario}>
+                  {horario.materia} (#{horario.id_horario})
+                </option>
+              ))}
+            </select>
           </div>
           <div className="field" style={{ marginBottom: 0 }}>
             <label>{t("fecha")}</label>

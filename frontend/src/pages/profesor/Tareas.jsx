@@ -6,6 +6,7 @@ export default function TareasProfesor() {
   const { t } = useI18n();
   const [tareas, setTareas] = useState([]);
   const [grupos, setGrupos] = useState([]);
+  const [materias, setMaterias] = useState([]);
   const [mostrarForm, setMostrarForm] = useState(false);
   const [entregasVisibles, setEntregasVisibles] = useState(null);
   const [entregas, setEntregas] = useState([]);
@@ -34,6 +35,13 @@ export default function TareasProfesor() {
     } finally {
       setEnviando(false);
     }
+  }
+
+  async function seleccionarGrupo(idGrupo) {
+    setForm({ ...form, id_grupo: idGrupo, id_materia: "" });
+    if (!idGrupo) { setMaterias([]); return; }
+    const { data } = await api.get(`/profesor/grupos/${idGrupo}/materias`);
+    setMaterias(data);
   }
 
   async function verEntregas(tarea) {
@@ -87,14 +95,17 @@ export default function TareasProfesor() {
             <div className="grid grid-cols-2">
               <div className="field">
                 <label>{t("grupo")}</label>
-                <select required value={form.id_grupo} onChange={(e) => setForm({ ...form, id_grupo: e.target.value })}>
+                <select required value={form.id_grupo} onChange={(e) => seleccionarGrupo(e.target.value)}>
                   <option value="">--</option>
                   {grupos.map((g) => <option key={g.id_grupo} value={g.id_grupo}>{g.grupo || `Grupo ${g.id_grupo}`}</option>)}
                 </select>
               </div>
               <div className="field">
-                <label>{t("nav_materias") /* id_materia numérico */}</label>
-                <input required type="number" value={form.id_materia} onChange={(e) => setForm({ ...form, id_materia: e.target.value })} />
+                <label>{t("nav_materias")}</label>
+                <select required value={form.id_materia} onChange={(e) => setForm({ ...form, id_materia: e.target.value })}>
+                  <option value="">--</option>
+                  {materias.map((materia) => <option key={materia.id_materia} value={materia.id_materia}>{materia.materia}</option>)}
+                </select>
               </div>
             </div>
             <div className="field">

@@ -51,8 +51,12 @@ export function AuthProvider({ children }) {
     setPerfil(null);
   }, []);
 
+  const actualizarPerfil = useCallback((nuevoPerfil) => {
+    setPerfil(nuevoPerfil);
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ usuario, perfil, cargando, login, logout }}>
+    <AuthContext.Provider value={{ usuario, perfil, cargando, login, logout, actualizarPerfil }}>
       {children}
     </AuthContext.Provider>
   );

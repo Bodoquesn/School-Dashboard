@@ -13,9 +13,15 @@ from utils import roles_requeridos
 
 alumno_bp = Blueprint("alumno", __name__, url_prefix="/api/alumno")
 
+EXTENSIONES_PERMITIDAS = {"pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "zip", "png", "jpg", "jpeg", "webp"}
+
 
 def _id_alumno_actual():
     return get_jwt().get("id_referencia")
+
+
+def _archivo_permitido(nombre):
+    return "." in nombre and nombre.rsplit(".", 1)[1].lower() in EXTENSIONES_PERMITIDAS
 
 
 @alumno_bp.get("/calificaciones")
@@ -144,12 +150,17 @@ def tareas():
 def entregar_tarea(id_tarea):
     id_alumno = _id_alumno_actual()
     tarea = Tarea.query.get_or_404(id_tarea)
+    alumno = CAlumno.query.get(id_alumno)
+    if not alumno or tarea.id_grupo != alumno.id_grupo:
+        return jsonify({"msg": "La tarea no pertenece al grupo del alumno"}), 403
 
     comentario = request.form.get("comentario", "")
     archivo = request.files.get("archivo")
     ruta_guardada = None
 
     if archivo:
+        if not archivo.filename or not _archivo_permitido(archivo.filename):
+            return jsonify({"msg": "Tipo de archivo no permitido"}), 400
         nombre_seguro = secure_filename(archivo.filename)
         nombre_final = f"entrega_{id_tarea}_{id_alumno}_{nombre_seguro}"
         ruta_guardada = os.path.join(current_app.config["UPLOAD_FOLDER"], nombre_final)

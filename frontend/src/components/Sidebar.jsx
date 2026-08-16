@@ -11,6 +11,7 @@ const linksAlumno = [
   { to: "/materias", key: "nav_materias", icon: "📚" },
   { to: "/profesores", key: "nav_profesores", icon: "🧑‍🏫" },
   { to: "/companeros", key: "nav_companeros", icon: "👥" },
+  { to: "/reportes", key: "nav_reportes", icon: "📈" },
 ];
 
 const linksProfesor = [
@@ -18,13 +19,21 @@ const linksProfesor = [
   { to: "/calificaciones", key: "nav_calificaciones", icon: "📊" },
   { to: "/tareas", key: "nav_tareas", icon: "📝" },
   { to: "/asistencia", key: "nav_asistencia", icon: "✅" },
+  { to: "/reportes", key: "nav_reportes", icon: "📈" },
+  { to: "/argos", key: "nav_argos", icon: "📷" },
+];
+
+const linksAdmin = [
+  { to: "/argos", key: "nav_argos", icon: "📷" },
 ];
 
 export default function Sidebar() {
   const { t } = useI18n();
   const { usuario, logout } = useAuth();
   const navigate = useNavigate();
-  const links = usuario?.tipo_usuario === "profesor" ? linksProfesor : linksAlumno;
+  const links = usuario?.tipo_usuario === "admin"
+    ? linksAdmin
+    : usuario?.tipo_usuario === "profesor" ? linksProfesor : linksAlumno;
 
   function handleLogout() {
     if (window.confirm(t("logout_confirm"))) {

@@ -5,6 +5,9 @@ backend/**/__pycache__/
 backend/.env
 backend/uploads/*
 !backend/uploads/.gitkeep
+backend/credenciales_generadas.csv
+backend/import_alumnos.sql
+backend/*.xlsx
 
 # Frontend
 frontend/node_modules/

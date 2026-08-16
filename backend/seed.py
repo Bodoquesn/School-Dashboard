@@ -3,11 +3,12 @@ Script de ayuda para crear usuarios de acceso (login) ligados a registros
 YA EXISTENTES en c_alumnos / c_profesor.
 
 Uso:
-    python seed.py alumno   id   usuario   contraseña
-    python seed.py profesor  id   usuario   contraseña
+    python seed.py alumno   12   ana.garcia   miPassword123
+    python seed.py profesor  3   juan.perez   otraPassword456
+    python seed.py admin     0   admin        adminPassword789
 
 Donde el segundo argumento es el id_alumno / id_profesor ya existente en tu
-base de datos.
+base de datos (usa 0 para admin, que no está ligado a ninguna tabla).
 """
 import sys
 from app import create_app
