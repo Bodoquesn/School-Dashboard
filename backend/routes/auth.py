@@ -7,7 +7,7 @@ from flask_jwt_extended import (
     get_jwt_identity, get_jwt,
 )
 from extensions import db, bcrypt
-from models import Usuario, CAlumno, CProfesor
+from models import Usuario, CAlumno, CProfesor, CCampus, CCarrera, CGrado, CGrupo
 from utils import verificar_password
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
@@ -20,11 +20,32 @@ def _perfil_de(usuario: Usuario):
     """Regresa el perfil (nombre, foto, etc.) ligado a este usuario."""
     if usuario.tipo_usuario == "alumno":
         persona = CAlumno.query.get(usuario.id_referencia)
-        return persona.to_dict() if persona else {}
+        return _perfil_academico(persona.to_dict(), persona) if persona else {}
     if usuario.tipo_usuario == "profesor":
         persona = CProfesor.query.get(usuario.id_referencia)
-        return persona.to_dict() if persona else {}
+        return _perfil_academico(persona.to_dict(), persona) if persona else {}
     return {"nombre": "Administrador"}
+
+
+def _perfil_academico(perfil, persona):
+    carrera = CCarrera.query.get(persona.id_carrera) if persona.id_carrera else None
+    grado = CGrado.query.get(persona.id_grado) if persona.id_grado else None
+    grupo = CGrupo.query.get(persona.id_grupo) if persona.id_grupo else None
+    campus = CCampus.query.get(persona.id_campus) if persona.id_campus else None
+    perfil.update({
+        "carrera": carrera.nombrecarrera if carrera else None,
+        "cuatrimestre": _numero_grado(grado.Grado) if grado else None,
+        "grupo": grupo.grupo if grupo else None,
+        "campus": campus.nombrecampus if campus else None,
+    })
+    return perfil
+
+
+def _numero_grado(valor):
+    if valor is None:
+        return None
+    numero = float(valor)
+    return int(numero) if numero.is_integer() else numero
 
 
 @auth_bp.post("/login")

@@ -8,7 +8,7 @@ from sqlalchemy import distinct, func
 
 from extensions import db
 from models import (
-    CAlumno, CCampus, CGrupo, EventoBiometrico, RostroAlumno,
+    CAlumno, CCampus, DHorario, EventoBiometrico, RostroAlumno,
 )
 from services.face_engine import FaceEngineError, cosine_similarity, get_face_engine
 from utils import roles_requeridos
@@ -27,9 +27,9 @@ def _alumnos_autorizados_query():
     claims = _claims()
     query = CAlumno.query
     if claims.get("tipo_usuario") == "profesor":
-        query = query.join(CGrupo, CAlumno.id_grupo == CGrupo.id_grupo).filter(
-            CGrupo.id_profesor == claims.get("id_referencia")
-        )
+        query = query.join(DHorario, CAlumno.id_grupo == DHorario.id_grupo).filter(
+            DHorario.id_profesor == claims.get("id_referencia")
+        ).distinct()
     return query
 
 

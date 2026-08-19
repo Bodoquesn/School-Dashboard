@@ -22,16 +22,24 @@ def _id_profesor_actual():
     return get_jwt().get("id_referencia")
 
 
+def _es_admin():
+    return get_jwt().get("tipo_usuario") == "admin"
+
+
 def _grupo_autorizado(id_grupo):
-    return CGrupo.query.filter_by(
+    grupo = CGrupo.query.get(id_grupo)
+    if not grupo or _es_admin():
+        return grupo
+    asignado = DHorario.query.filter_by(
         id_grupo=id_grupo, id_profesor=_id_profesor_actual()
     ).first()
+    return grupo if asignado or grupo.id_profesor == _id_profesor_actual() else None
 
 
 def _horario_autorizado(id_horario, id_grupo=None):
-    query = DHorario.query.filter_by(
-        id_horario=id_horario, id_profesor=_id_profesor_actual()
-    )
+    query = DHorario.query.filter_by(id_horario=id_horario)
+    if not _es_admin():
+        query = query.filter_by(id_profesor=_id_profesor_actual())
     if id_grupo is not None:
         query = query.filter_by(id_grupo=id_grupo)
     return query.first()
@@ -50,15 +58,23 @@ def _calificacion_valida(valor):
 
 
 @profesor_bp.get("/grupos")
-@roles_requeridos("profesor")
+@roles_requeridos("profesor", "admin")
 def grupos():
-    id_profesor = _id_profesor_actual()
-    lista = CGrupo.query.filter_by(id_profesor=id_profesor).all()
-    return jsonify([{"id_grupo": g.id_grupo, "grupo": g.grupo, "id_carrera": g.id_carrera} for g in lista])
+    query = CGrupo.query
+    if not _es_admin():
+        query = query.outerjoin(DHorario, DHorario.id_grupo == CGrupo.id_grupo).filter(
+            (DHorario.id_profesor == _id_profesor_actual())
+            | (CGrupo.id_profesor == _id_profesor_actual())
+        )
+    lista = query.distinct().order_by(CGrupo.grupo).all()
+    return jsonify([{
+        "id_grupo": g.id_grupo, "grupo": g.grupo,
+        "id_carrera": g.id_carrera, "id_grado": g.id_grado,
+    } for g in lista])
 
 
 @profesor_bp.get("/grupos/<int:id_grupo>/alumnos")
-@roles_requeridos("profesor")
+@roles_requeridos("profesor", "admin")
 def alumnos_de_grupo(id_grupo):
     if not _grupo_autorizado(id_grupo):
         return jsonify({"msg": "El grupo no pertenece al profesor autenticado"}), 403
@@ -67,13 +83,14 @@ def alumnos_de_grupo(id_grupo):
 
 
 @profesor_bp.get("/grupos/<int:id_grupo>/horarios")
-@roles_requeridos("profesor")
+@roles_requeridos("profesor", "admin")
 def horarios_de_grupo(id_grupo):
     if not _grupo_autorizado(id_grupo):
         return jsonify({"msg": "El grupo no pertenece al profesor autenticado"}), 403
-    horarios = DHorario.query.filter_by(
-        id_profesor=_id_profesor_actual(), id_grupo=id_grupo
-    ).all()
+    query = DHorario.query.filter_by(id_grupo=id_grupo)
+    if not _es_admin():
+        query = query.filter_by(id_profesor=_id_profesor_actual())
+    horarios = query.all()
     resultado = []
     for horario in horarios:
         materia = CMateria.query.get(horario.id_materias) if horario.id_materias else None
@@ -86,16 +103,15 @@ def horarios_de_grupo(id_grupo):
 
 
 @profesor_bp.get("/grupos/<int:id_grupo>/materias")
-@roles_requeridos("profesor")
+@roles_requeridos("profesor", "admin")
 def materias_de_grupo(id_grupo):
     grupo = _grupo_autorizado(id_grupo)
     if not grupo:
         return jsonify({"msg": "El grupo no pertenece al profesor autenticado"}), 403
-    ids_materia = {
-        horario.id_materias for horario in DHorario.query.filter_by(
-            id_profesor=_id_profesor_actual(), id_grupo=id_grupo
-        ).all() if horario.id_materias
-    }
+    horarios_query = DHorario.query.filter_by(id_grupo=id_grupo)
+    if not _es_admin():
+        horarios_query = horarios_query.filter_by(id_profesor=_id_profesor_actual())
+    ids_materia = {h.id_materias for h in horarios_query.all() if h.id_materias}
     if ids_materia:
         materias = CMateria.query.filter(CMateria.id_materias.in_(ids_materia)).order_by(CMateria.nombre).all()
     else:
@@ -107,13 +123,15 @@ def materias_de_grupo(id_grupo):
 
 # ---------------------------------------------------------------- Calificaciones
 @profesor_bp.get("/calificaciones")
-@roles_requeridos("profesor")
+@roles_requeridos("profesor", "admin")
 def ver_calificaciones():
     id_grupo = request.args.get("id_grupo", type=int)
     id_materia = request.args.get("id_materia", type=int)
     id_profesor = _id_profesor_actual()
 
-    query = DCalificacion.query.filter_by(id_profesor=id_profesor)
+    query = DCalificacion.query
+    if not _es_admin():
+        query = query.filter_by(id_profesor=id_profesor)
     if id_materia:
         query = query.filter_by(id_materia=id_materia)
 
@@ -184,10 +202,13 @@ def capturar_calificacion():
 
 # ---------------------------------------------------------------- Tareas
 @profesor_bp.get("/tareas")
-@roles_requeridos("profesor")
+@roles_requeridos("profesor", "admin")
 def listar_tareas():
     id_profesor = _id_profesor_actual()
-    lista = Tarea.query.filter_by(id_profesor=id_profesor).order_by(Tarea.fecha_entrega.desc()).all()
+    query = Tarea.query
+    if not _es_admin():
+        query = query.filter_by(id_profesor=id_profesor)
+    lista = query.order_by(Tarea.fecha_entrega.desc()).all()
     return jsonify([t.to_dict() for t in lista])
 
 
@@ -274,11 +295,13 @@ def calificar_entrega(id_entrega):
 
 # ---------------------------------------------------------------- Asistencia
 @profesor_bp.get("/asistencia")
-@roles_requeridos("profesor")
+@roles_requeridos("profesor", "admin")
 def ver_asistencia():
     id_horario = request.args.get("id_horario", type=int)
     fecha = request.args.get("fecha")  # YYYY-MM-DD
-    query = Asistencia.query.filter_by(id_profesor=_id_profesor_actual())
+    query = Asistencia.query
+    if not _es_admin():
+        query = query.filter_by(id_profesor=_id_profesor_actual())
     if id_horario:
         if not _horario_autorizado(id_horario):
             return jsonify({"msg": "Horario no autorizado"}), 403

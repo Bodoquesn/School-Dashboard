@@ -5,16 +5,23 @@ export default function Dashboard() {
   const { t } = useI18n();
   const { usuario, perfil } = useAuth();
   const esProfesor = usuario?.tipo_usuario === "profesor";
+  const esAdmin = usuario?.tipo_usuario === "admin";
 
   return (
     <div>
       <div className="page-header">
         <h1>{t("welcome")}, {perfil?.nombre?.split(" ")[0] || usuario?.username} 👋</h1>
-        <p>{esProfesor ? t("dashboard_subtitle_profesor") : t("dashboard_subtitle_alumno")}</p>
+        <p>{esAdmin ? t("dashboard_subtitle_admin") : esProfesor ? t("dashboard_subtitle_profesor") : t("dashboard_subtitle_alumno")}</p>
       </div>
 
       <div className="grid grid-cols-3">
-        {esProfesor ? (
+        {esAdmin ? (
+          <>
+            <ResumenCard icono="🏫" titulo={t("nav_academia")} texto={t("academia_subtitle_admin")} />
+            <ResumenCard icono="📈" titulo={t("nav_reportes")} texto={t("reportes_subtitle")} />
+            <ResumenCard icono="📷" titulo={t("nav_argos")} texto={t("argos_subtitle")} />
+          </>
+        ) : esProfesor ? (
           <>
             <ResumenCard icono="📊" titulo={t("nav_calificaciones")} texto={t("profesor_calificaciones_subtitle")} />
             <ResumenCard icono="📝" titulo={t("nav_tareas")} texto={t("profesor_tareas_subtitle")} />

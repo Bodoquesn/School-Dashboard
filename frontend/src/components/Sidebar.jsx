@@ -16,6 +16,7 @@ const linksAlumno = [
 
 const linksProfesor = [
   { to: "/", key: "nav_dashboard", icon: "🏠", end: true },
+  { to: "/academia", key: "nav_academia", icon: "🏫" },
   { to: "/calificaciones", key: "nav_calificaciones", icon: "📊" },
   { to: "/tareas", key: "nav_tareas", icon: "📝" },
   { to: "/asistencia", key: "nav_asistencia", icon: "✅" },
@@ -24,6 +25,9 @@ const linksProfesor = [
 ];
 
 const linksAdmin = [
+  { to: "/", key: "nav_dashboard", icon: "🏠", end: true },
+  { to: "/academia", key: "nav_academia", icon: "🏫" },
+  { to: "/reportes", key: "nav_reportes", icon: "📈" },
   { to: "/argos", key: "nav_argos", icon: "📷" },
 ];
 

@@ -112,7 +112,7 @@ class CAlumno(db.Model):
     matricula = db.Column(db.String(30), unique=True)  # ver migración 002
 
     def nombre_completo(self):
-        return f"{self.nombre} {self.apellido_paterno} {self.apellido_materno}".strip()
+        return " ".join(filter(None, [self.nombre, self.apellido_paterno, self.apellido_materno]))
 
     def to_dict(self):
         return {
@@ -158,7 +158,7 @@ class CProfesor(db.Model):
     clave_tutor = db.Column(db.String(30), unique=True)  # ver migración 002
 
     def nombre_completo(self):
-        return f"{self.nombre} {self.apellido_paterno} {self.apellido_materno}".strip()
+        return " ".join(filter(None, [self.nombre, self.apellido_paterno, self.apellido_materno]))
 
     def to_dict(self):
         return {

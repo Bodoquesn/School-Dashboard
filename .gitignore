@@ -6,8 +6,13 @@ backend/.env
 backend/uploads/*
 !backend/uploads/.gitkeep
 backend/credenciales_generadas.csv
+backend/credenciales_*generadas*.csv
+**/credenciales_generadas*.csv
+**/credenciales_profesores*.csv
 backend/import_alumnos.sql
+backend/import_alumnos*.sql
 backend/*.xlsx
+backend/*.xls
 
 # Frontend
 frontend/node_modules/

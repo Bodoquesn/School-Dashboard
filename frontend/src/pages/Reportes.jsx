@@ -18,7 +18,8 @@ export default function Reportes() {
   if (error) return <div className="error-box">{error}</div>;
   if (!reporte) return <p>{t("cargando")}</p>;
 
-  const asistencia = usuario?.tipo_usuario === "profesor"
+  const asistenciaAgrupada = usuario?.tipo_usuario !== "alumno";
+  const asistencia = asistenciaAgrupada
     ? reporte.asistencia_grupo || []
     : reporte.asistencia || [];
 
@@ -40,7 +41,7 @@ export default function Reportes() {
 
       <div className="grid grid-cols-2">
         <TablaPromedios filas={reporte.promedios_materia || []} t={t} />
-        <TablaAsistencia filas={asistencia} esProfesor={usuario?.tipo_usuario === "profesor"} t={t} />
+        <TablaAsistencia filas={asistencia} esProfesor={asistenciaAgrupada} t={t} />
       </div>
     </div>
   );

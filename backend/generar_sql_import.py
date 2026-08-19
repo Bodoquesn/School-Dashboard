@@ -256,6 +256,10 @@ def main():
         clave_tutor = row.get("clave Tutor")
         pvar = profesor_var.get(clave_tutor)
         pvar_sql = pvar if pvar else "NULL"
+        grpvar = grupo_var[(row["Especialidad"], row["Subsistema"])]
+        gvar = grado_var[(row["Especialidad"], row["Subsistema"])]
+        carrera_ref = carrera_var[row["Especialidad"]]
+        campus_ref = campus_var[row["Centro"]]
 
         sql.append("INSERT INTO d_calificaciones (id_alumnos, calificacion, id_materia, id_profesor, periodo)")
         sql.append(
@@ -263,6 +267,13 @@ def main():
         )
         sql.append(
             "ON DUPLICATE KEY UPDATE calificacion = VALUES(calificacion), id_profesor = VALUES(id_profesor);"
+        )
+        sql.append(
+            "INSERT INTO d_horarios (id_profesor, id_grado, id_grupo, id_carrera, id_campus, id_materias) "
+            f"SELECT {pvar_sql}, {gvar}, {grpvar}, {carrera_ref}, {campus_ref}, {mvar} "
+            f"WHERE {pvar_sql} IS NOT NULL AND NOT EXISTS ("
+            "SELECT 1 FROM d_horarios "
+            f"WHERE id_profesor={pvar_sql} AND id_grupo={grpvar} AND id_materias={mvar});"
         )
         n_calif += 1
 

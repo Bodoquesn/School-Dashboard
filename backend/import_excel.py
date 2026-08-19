@@ -49,7 +49,7 @@ from app import create_app
 from extensions import db, bcrypt
 from models import (
     CAlumno, CProfesor, CMateria, CEstatus, CCampus, CCarrera, CGrado, CGrupo,
-    DCalificacion, Usuario,
+    DCalificacion, DHorario, Usuario,
 )
 
 COLUMNAS_ESPERADAS = [
@@ -292,6 +292,21 @@ def main():
             registro.calificacion = row[" Final"]
             registro.id_profesor = profesor.id_profesor
             registro.fecha_captura = datetime.utcnow()
+
+            asignacion = DHorario.query.filter_by(
+                id_profesor=profesor.id_profesor,
+                id_grupo=alumno.id_grupo,
+                id_materias=materia.id_materias,
+            ).first()
+            if not asignacion:
+                db.session.add(DHorario(
+                    id_profesor=profesor.id_profesor,
+                    id_grado=alumno.id_grado,
+                    id_grupo=alumno.id_grupo,
+                    id_carrera=alumno.id_carrera,
+                    id_campus=alumno.id_campus,
+                    id_materias=materia.id_materias,
+                ))
             calificaciones_guardadas += 1
 
         db.session.commit()

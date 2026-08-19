@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import Reportes from "./pages/Reportes";
+import Academia from "./pages/Academia";
 
 import CalificacionesAlumno from "./pages/alumno/Calificaciones";
 import TareasAlumno from "./pages/alumno/Tareas";
@@ -33,6 +34,7 @@ export default function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/configuracion" element={<Settings />} />
               <Route path="/reportes" element={<Reportes />} />
+              <Route path="/academia" element={<RoleRoute roles={["profesor", "admin"]}><Academia /></RoleRoute>} />
 
               {/* Calificaciones y Tareas cambian de componente según el rol */}
               <Route

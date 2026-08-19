@@ -22,12 +22,14 @@ def create_app(config_override=None):
     from routes.profesor import profesor_bp
     from routes.common import common_bp
     from routes.biometria import biometria_bp
+    from routes.academia import academia_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(alumno_bp)
     app.register_blueprint(profesor_bp)
     app.register_blueprint(common_bp)
     app.register_blueprint(biometria_bp)
+    app.register_blueprint(academia_bp)
 
     @app.errorhandler(404)
     def not_found(e):

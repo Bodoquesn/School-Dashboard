@@ -8,7 +8,7 @@ from sqlalchemy import func
 from extensions import db
 from models import (
     Asistencia, CAlumno, CGrupo, CMateria, CProfesor, DCalificacion,
-    EntregaTarea, Tarea,
+    DHorario, EntregaTarea, Tarea,
 )
 
 common_bp = Blueprint("common", __name__, url_prefix="/api")
@@ -33,6 +33,9 @@ def _archivo_autorizado(nombre_archivo):
     tipo = claims.get("tipo_usuario")
     referencia = claims.get("id_referencia")
     nombre_normalizado = nombre_archivo.replace("\\", "/")
+
+    if tipo == "admin":
+        return True
 
     # Las fotos de perfil se muestran a miembros autenticados del portal.
     if nombre_normalizado.startswith("perfiles/perfil_"):
@@ -73,6 +76,8 @@ def resumen_reportes():
         return jsonify(_reporte_alumno(id_referencia))
     if tipo == "profesor":
         return jsonify(_reporte_profesor(id_referencia))
+    if tipo == "admin":
+        return jsonify(_reporte_admin())
     return jsonify({"msg": "No hay reportes disponibles para este rol"}), 403
 
 
@@ -130,7 +135,12 @@ def _reporte_alumno(id_alumno):
 
 
 def _reporte_profesor(id_profesor):
-    grupos = CGrupo.query.filter_by(id_profesor=id_profesor).all()
+    grupos = (
+        CGrupo.query.join(DHorario, DHorario.id_grupo == CGrupo.id_grupo)
+        .filter(DHorario.id_profesor == id_profesor)
+        .distinct()
+        .all()
+    )
     ids_grupo = [grupo.id_grupo for grupo in grupos]
     estudiantes = CAlumno.query.filter(CAlumno.id_grupo.in_(ids_grupo)).count() if ids_grupo else 0
     tareas = Tarea.query.filter_by(id_profesor=id_profesor).count()
@@ -148,7 +158,7 @@ def _reporte_profesor(id_profesor):
         db.session.query(CGrupo.id_grupo, CGrupo.grupo, Asistencia.estatus, func.count(Asistencia.id_asistencia))
         .join(CAlumno, CAlumno.id_grupo == CGrupo.id_grupo)
         .join(Asistencia, Asistencia.id_alumno == CAlumno.id_alumno)
-        .filter(CGrupo.id_profesor == id_profesor, Asistencia.id_profesor == id_profesor)
+        .filter(CGrupo.id_grupo.in_(ids_grupo), Asistencia.id_profesor == id_profesor)
         .group_by(CGrupo.id_grupo, CGrupo.grupo, Asistencia.estatus)
         .order_by(CGrupo.grupo, Asistencia.estatus)
         .all()
@@ -159,6 +169,40 @@ def _reporte_profesor(id_profesor):
             {"clave": "estudiantes", "valor": estudiantes},
             {"clave": "tareas_asignadas", "valor": tareas},
             {"clave": "registros_asistencia", "valor": eventos},
+        ],
+        "promedios_materia": [
+            {"materia": nombre, "promedio": round(float(valor), 2)}
+            for nombre, valor in promedios if valor is not None
+        ],
+        "asistencia_grupo": [
+            {"id_grupo": id_grupo, "grupo": grupo or str(id_grupo), "estatus": estatus, "total": total}
+            for id_grupo, grupo, estatus, total in asistencia
+        ],
+    }
+
+
+def _reporte_admin():
+    promedios = (
+        db.session.query(CMateria.nombre, func.avg(DCalificacion.calificacion))
+        .join(DCalificacion, DCalificacion.id_materia == CMateria.id_materias)
+        .group_by(CMateria.id_materias, CMateria.nombre)
+        .order_by(CMateria.nombre)
+        .all()
+    )
+    asistencia = (
+        db.session.query(CGrupo.id_grupo, CGrupo.grupo, Asistencia.estatus, func.count(Asistencia.id_asistencia))
+        .join(CAlumno, CAlumno.id_grupo == CGrupo.id_grupo)
+        .join(Asistencia, Asistencia.id_alumno == CAlumno.id_alumno)
+        .group_by(CGrupo.id_grupo, CGrupo.grupo, Asistencia.estatus)
+        .order_by(CGrupo.grupo, Asistencia.estatus)
+        .all()
+    )
+    return {
+        "tarjetas": [
+            {"clave": "profesores", "valor": CProfesor.query.count()},
+            {"clave": "grupos", "valor": CGrupo.query.count()},
+            {"clave": "estudiantes", "valor": CAlumno.query.count()},
+            {"clave": "materias", "valor": CMateria.query.count()},
         ],
         "promedios_materia": [
             {"materia": nombre, "promedio": round(float(valor), 2)}

@@ -102,7 +102,17 @@ def materias():
     alumno = CAlumno.query.get(id_alumno)
     if not alumno:
         return jsonify([])
-    lista = CMateria.query.filter_by(id_carrera=alumno.id_carrera, id_grado=alumno.id_grado).all()
+    lista = (
+        CMateria.query.join(DHorario, DHorario.id_materias == CMateria.id_materias)
+        .filter(DHorario.id_grupo == alumno.id_grupo)
+        .distinct()
+        .order_by(CMateria.nombre)
+        .all()
+    )
+    if not lista:
+        lista = CMateria.query.filter_by(
+            id_carrera=alumno.id_carrera, id_grado=alumno.id_grado
+        ).order_by(CMateria.nombre).all()
     return jsonify([{"id_materias": m.id_materias, "nombre": m.nombre, "foto": m.foto} for m in lista])
 
 
@@ -113,7 +123,15 @@ def profesores():
     alumno = CAlumno.query.get(id_alumno)
     if not alumno:
         return jsonify([])
-    lista = CProfesor.query.filter_by(id_grupo=alumno.id_grupo).all()
+    lista = (
+        CProfesor.query.join(DHorario, DHorario.id_profesor == CProfesor.id_profesor)
+        .filter(DHorario.id_grupo == alumno.id_grupo)
+        .distinct()
+        .order_by(CProfesor.nombre, CProfesor.apellido_paterno)
+        .all()
+    )
+    if not lista:
+        lista = CProfesor.query.filter_by(id_grupo=alumno.id_grupo).all()
     return jsonify([p.to_dict() for p in lista])
 
 

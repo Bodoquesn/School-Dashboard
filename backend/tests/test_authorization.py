@@ -12,7 +12,7 @@ from flask_jwt_extended import create_access_token
 from app import create_app
 from extensions import db
 from models import (
-    CAlumno, CGrupo, CMateria, CProfesor, DHorario,
+    CAlumno, CCampus, CCarrera, CGrado, CGrupo, CMateria, CProfesor, DHorario,
     EntregaTarea, Tarea, Usuario,
 )
 
@@ -30,15 +30,20 @@ class AuthorizationTestCase(unittest.TestCase):
         with self.app.app_context():
             db.create_all()
             db.session.add_all([
+                CCampus(id_campus=1, nombrecampus="Centro"),
+                CCarrera(id_carrera=1, nombrecarrera="Datos", id_campus=1),
+                CGrado(id_grado=1, id_carrera=1, Grado="5"),
+            ])
+            db.session.add_all([
                 CProfesor(id_profesor=1, nombre="Ada"),
                 CProfesor(id_profesor=2, nombre="Grace"),
-                CGrupo(id_grupo=1, grupo="A", id_profesor=1),
-                CGrupo(id_grupo=2, grupo="B", id_profesor=2),
-                CAlumno(id_alumno=1, nombre="Ana", id_grupo=1),
-                CAlumno(id_alumno=2, nombre="Beto", id_grupo=2),
+                CGrupo(id_grupo=1, grupo="A", id_profesor=1, id_campus=1, id_carrera=1, id_grado=1),
+                CGrupo(id_grupo=2, grupo="B", id_profesor=2, id_campus=1, id_carrera=1, id_grado=1),
+                CAlumno(id_alumno=1, nombre="Ana", id_grupo=1, id_campus=1, id_carrera=1, id_grado=1),
+                CAlumno(id_alumno=2, nombre="Beto", id_grupo=2, id_campus=1, id_carrera=1, id_grado=1),
                 CMateria(id_materias=1, nombre="Datos"),
-                DHorario(id_horario=1, id_profesor=1, id_grupo=1, id_materias=1),
-                DHorario(id_horario=2, id_profesor=2, id_grupo=2, id_materias=1),
+                DHorario(id_horario=1, id_profesor=1, id_grupo=1, id_materias=1, id_campus=1, id_carrera=1, id_grado=1),
+                DHorario(id_horario=2, id_profesor=2, id_grupo=2, id_materias=1, id_campus=1, id_carrera=1, id_grado=1),
                 Usuario(id_usuario=1, username="ana", password_hash="x", tipo_usuario="alumno", id_referencia=1),
             ])
             db.session.flush()
@@ -133,6 +138,30 @@ class AuthorizationTestCase(unittest.TestCase):
         response = self.client.get("/api/biometria/alumnos", headers=self.auth(self.admin_token))
         self.assertEqual(response.status_code, 200)
         self.assertEqual({item["id_alumno"] for item in response.get_json()}, {1, 2})
+
+    def test_alumno_ve_materias_y_profesores_por_asignacion(self):
+        materias = self.client.get("/api/alumno/materias", headers=self.auth(self.alumno_token))
+        profesores = self.client.get("/api/alumno/profesores", headers=self.auth(self.alumno_token))
+        self.assertEqual(materias.status_code, 200)
+        self.assertEqual([item["nombre"] for item in materias.get_json()], ["Datos"])
+        self.assertEqual(profesores.status_code, 200)
+        self.assertEqual([item["nombre"] for item in profesores.get_json()], ["Ada"])
+
+    def test_academia_profesor_incluye_asignacion_y_companeros_area(self):
+        response = self.client.get("/api/academia/resumen", headers=self.auth(self.profesor_token))
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertEqual(len(data["asignaciones"]), 1)
+        self.assertEqual(data["asignaciones"][0]["cuatrimestre"], 5)
+        self.assertEqual([item["nombre"] for item in data["companeros_area"]], ["Grace"])
+
+    def test_admin_ve_todas_las_asignaciones_y_grupos(self):
+        academia = self.client.get("/api/academia/resumen", headers=self.auth(self.admin_token))
+        grupos = self.client.get("/api/profesor/grupos", headers=self.auth(self.admin_token))
+        self.assertEqual(academia.status_code, 200)
+        self.assertEqual(len(academia.get_json()["asignaciones"]), 2)
+        self.assertEqual(grupos.status_code, 200)
+        self.assertEqual({item["id_grupo"] for item in grupos.get_json()}, {1, 2})
 
 
 if __name__ == "__main__":
